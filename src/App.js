@@ -9,6 +9,7 @@ function App() {
   const [newTask, setNewTask] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     fetchTasks();
@@ -18,19 +19,26 @@ function App() {
     try {
       const res = await axios.get(API_BASE);
       setTasks(res.data);
+      setErrorMessage('');
     } catch (err) {
       console.error('Ошибка загрузки:', err);
+      setErrorMessage('Ошибка загрузки задач');
     }
   };
 
   const addTask = async () => {
     if (!newTask.trim()) return;
     try {
-      await axios.post(API_BASE, { title: newTask, completed: false });
+      await axios.post(API_BASE, { title: newTask });
       setNewTask('');
       fetchTasks();
     } catch (err) {
-      console.error('Ошибка добавления:', err);
+      if (err.response && err.response.status === 403) {
+        setErrorMessage('❌ Достигнут лимит — максимум 10 задач');
+      } else {
+        console.error('Ошибка добавления:', err);
+        setErrorMessage('Ошибка добавления задачи');
+      }
     }
   };
 
@@ -40,6 +48,7 @@ function App() {
       fetchTasks();
     } catch (err) {
       console.error('Ошибка удаления:', err);
+      setErrorMessage('Ошибка удаления задачи');
     }
   };
 
@@ -49,6 +58,7 @@ function App() {
       fetchTasks();
     } catch (err) {
       console.error('Ошибка обновления:', err);
+      setErrorMessage('Ошибка обновления задачи');
     }
   };
 
@@ -64,12 +74,32 @@ function App() {
       fetchTasks();
     } catch (err) {
       console.error('Ошибка сохранения:', err);
+      setErrorMessage('Ошибка сохранения задачи');
     }
   };
 
+  const clearAllTasks = async () => {
+    if (window.confirm('Удалить все задачи? Это действие нельзя отменить.')) {
+      try {
+        await axios.delete(API_BASE);
+        fetchTasks();
+        setErrorMessage('');
+      } catch (err) {
+        console.error('Ошибка очистки:', err);
+        setErrorMessage('Ошибка очистки задач');
+      }
+    }
+  };
+
+  const completedCount = tasks.filter(t => t.completed).length;
+
   return (
     <div className="App">
-      <h1>📋 Список задач</h1>
+      <div className="header">
+        <h1>📋 Менеджер задач</h1>
+        <div className="subtitle">React + Go + PostgreSQL (максимум 10 задач)</div>
+      </div>
+
       <div className="add-form">
         <input
           type="text"
@@ -81,11 +111,23 @@ function App() {
         <button onClick={addTask}>➕ Добавить</button>
       </div>
 
+      {errorMessage && (
+        <div className="error-message">{errorMessage}</div>
+      )}
+
+      <div className="stats-bar">
+        <span className="task-count">📌 Всего: {tasks.length} | ✅ Выполнено: {completedCount}</span>
+        {tasks.length > 0 && (
+          <button className="clear-btn" onClick={clearAllTasks}>🗑 Очистить всё</button>
+        )}
+      </div>
+
       <ul className="tasks-list">
         {tasks.map(task => (
           <li key={task.id} className={task.completed ? 'completed' : ''}>
             {editingId === task.id ? (
               <input
+                className="edit-input"
                 type="text"
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
@@ -96,6 +138,7 @@ function App() {
             ) : (
               <>
                 <input
+                  className="task-checkbox"
                   type="checkbox"
                   checked={task.completed}
                   onChange={() => updateTask(task.id, !task.completed)}
