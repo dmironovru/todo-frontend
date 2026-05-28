@@ -1,15 +1,21 @@
-# Todo Manager
+# 📋 Todo Manager — Frontend (React)
 
-React + Go приложение для управления задачами.
+Фронтенд для менеджера задач. Автообновление, тёмная тема, адаптивный дизайн в стиле портфолио.
 
 ## Демо
-https://dmitrymironov.ru/lab/
+[https://dmitrymironov.ru/lab/](https://dmitrymironov.ru/lab/)
 
 ## Технологии
-- Frontend: React, Axios
-- Backend: Go (REST API)
-- Веб-сервер: Nginx
-- Деплой: VPS, systemd, HTTPS
+- React 19
+- Axios
+- CSS
+
+## Особенности
+- Лимит 10 задач
+- Поддержка редактирования (in-place)
+- Кнопка очистки всех задач
 
 ## Запуск локально
-...
+```bash
+npm install
+PUBLIC_URL=/lab npm start
